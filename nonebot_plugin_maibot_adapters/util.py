@@ -1,6 +1,9 @@
 import base64
+import ssl
 from pathlib import Path
 import hashlib
+from typing import Any, Coroutine
+
 import aiohttp
 from nonebot import logger
 
@@ -72,10 +75,15 @@ def base64_to_image(base64_str: str, save_dir: str = "data/images") -> str:
         raise ValueError(f"Base64解码失败: {str(e)}")
     
 
-async def download_image_url(url: str) -> bytes:
+async def download_image_url(url: str) -> str:
     """直接返回 Base64 字符串"""
     try:
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+        ssl_context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+        ssl_context.minimum_version = ssl.TLSVersion.TLSv1_2
+        ssl_context.maximum_version = ssl.TLSVersion.TLSv1_2  # 可选，确保只使用 TLS 1.2
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10),
+                                         connector=aiohttp.TCPConnector(ssl=ssl_context)
+                                         ) as session:
             async with session.get(url) as resp:
                 resp.raise_for_status()
                 image_bytes = await resp.read()
