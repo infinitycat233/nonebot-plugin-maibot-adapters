@@ -26,13 +26,11 @@ config = Config()
 # 定义日志配置
 
 class ChatBot:
-    context = ssl.create_default_context()
-    context.maximum_version = ssl.TLSVersion.TLSv1_2
     def __init__(self):
         self.bot = None  # bot 实例引用
         self._started = False
         self.fastapi_url =  config.Fastapi_url
-        self.client = httpx.AsyncClient(timeout=60,verify=self.context)  # 创建异步HTTP客户端
+        self.client = httpx.AsyncClient(timeout=60)  # 创建异步HTTP客户端
 
     async def _ensure_started(self):
         """确保所有任务已启动"""
