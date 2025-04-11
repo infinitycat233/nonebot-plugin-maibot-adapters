@@ -21,15 +21,15 @@ import json
 import base64
 
 
-# 检查配置文件
-required_fields = {"fastapi_url", "platfrom", "allow_group_list"}
-defined_fields = set(Config.model_fields.keys())
-
-missing_fields = required_fields - defined_fields
-if missing_fields:
-    raise ValueError(f"❌ Config.py 类缺少以下字段配置: {missing_fields}")
-else:
-    config = get_plugin_config(Config)
+# # 检查配置文件
+# required_fields = {"fastapi_url", "platfrom", "allow_group_list"}
+# defined_fields = set(Config.model_fields.keys())
+#
+# missing_fields = required_fields - defined_fields
+# if missing_fields:
+#     raise ValueError(f"❌ Config.py 类缺少以下字段配置: {missing_fields}")
+# else:
+config = get_plugin_config(Config)
 
 # 定义日志配置
 
