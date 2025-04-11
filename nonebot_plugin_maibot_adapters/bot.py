@@ -21,8 +21,15 @@ import json
 import base64
 
 
+# 检查配置文件
+required_fields = {"fastapi_url", "platfrom", "allow_group_list"}
+defined_fields = set(Config.model_fields.keys())
 
-config = get_plugin_config(Config)
+missing_fields = required_fields - defined_fields
+if missing_fields:
+    raise ValueError(f"❌ Config.py 类缺少以下字段配置: {missing_fields}")
+else:
+    config = get_plugin_config(Config)
 
 # 定义日志配置
 
@@ -121,7 +128,7 @@ class ChatBot:
 
         message_base = MessageBase(message_info,message_seg,raw_message=message_content)
 
-        await self.message_process(message_base)
+        await self.message_process(message_base,def_name = "handle_message")
 
     async def handle_group_announcement(self, event: MessageEvent, bot: Bot) -> None:
         """处理收到的消息"""
@@ -176,7 +183,7 @@ class ChatBot:
 
         message_base = MessageBase(message_info,message_seg,raw_message=message_content)
 
-        await self.message_process(message_base)
+        await self.message_process(message_base, def_name = "andle_group_announcement")
 
     async def handle_notice(self, event: NoticeEvent, bot: Bot) -> None:
         """处理收到的通知"""
@@ -230,7 +237,7 @@ class ChatBot:
 
             message_base = MessageBase(message_info,message_seg,raw_message=raw_message)
 
-            await self.message_process(message_base)
+            await self.message_process(message_base, def_name = "handle_notice")
 
         # 处理撤回消息存储的逻辑，先放着不动
         # elif isinstance(event, GroupRecallNoticeEvent) or isinstance(event, FriendRecallNoticeEvent):
@@ -341,7 +348,7 @@ class ChatBot:
         )
         message_base = MessageBase(message_info,message_content,raw_message="")   
         
-        await self.message_process(message_base)    
+        await self.message_process(message_base, def_name = "handle_image_message")
 
     async def handle_reply_message(self, event: MessageEvent, bot: Bot) -> None:
         """处理收到的消息"""
@@ -400,7 +407,7 @@ class ChatBot:
 
         message_base = MessageBase(message_info,message_seg,raw_message=event.get_plaintext())
 
-        await self.message_process(message_base)
+        await self.message_process(message_base, def_name = "handle_reply_message")
 
     async def handle_forward_message(self, event: MessageEvent, bot: Bot) -> None:
         """专用于处理合并转发的消息处理器"""
@@ -464,7 +471,7 @@ class ChatBot:
         message_base = MessageBase(message_info,message_seg,raw_message=combined_message)
 
         # 进入标准消息处理流程
-        await self.message_process(message_base)
+        await self.message_process(message_base, def_name = "handle_forward_message")
 
     async def process_message_segments(self, segments: list, layer: int) -> str:
         """递归处理消息段"""
@@ -503,7 +510,7 @@ class ChatBot:
         else:
             return f"[{seg_type}]"
 
-    async def message_process(self, message_base: MessageBase) -> None:
+    async def message_process(self, message_base: MessageBase, def_name) -> None:
         try:
             payload = message_base.to_dict()
             # logger.info(payload)
@@ -517,8 +524,8 @@ class ChatBot:
             
             # 检查响应状态
             if response.status_code != 200:
-                logger.error(f"FastAPI返回错误状态码: {response.status_code}")
-                logger.debug(f"响应内容: {response.text}")
+                logger.error(f"{def_name} - FastAPI返回错误状态码: {response.status_code}")
+                logger.debug(f"{def_name} - 响应内容: {response.text}")
             else:
                 response_data = response.json()
                 logger.success(f"收到服务端响应: {response_data}")
